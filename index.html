@@ -27,7 +27,11 @@
             </div>
             <div class="col s7">
                 <input placeholder="Type City Name" type="text" class="validate" id="search" name="search">
-                <a class="resultDataItem btn red darken-4" data-original-search-name="Honolulu,">Select</a>
+                <!-- <a class="resultDataItem btn red darken-4" data-clipboard-target=".copySet">Copy to clipboard</a> -->
+                <button class="btn grey lighten-2 copier" data-clipboard-target=".copySet">
+                    <img class="svgClippy" src="static/clippy.svg" alt="Copy to clipboard">
+                    <span class="grey-text darken-5"> Copy choices to clipboard</span>
+                </button>
             </div>
         </div>
     </div>
@@ -36,7 +40,7 @@
 
         <div class="col s6">
             <div id="searchList">
-                <table id="searchset2" class="responsive-table striped bordered">
+                <table id="searchset2" class="responsive-table striped bordered copySet">
                     <thead></thead>
                     <tbody id="tablebody2"></tbody>
                 </table>
@@ -49,7 +53,7 @@
         <div class="input-field col s6">
             <div id="resultset">
                 <table id="result" class="responsive-table striped">
-                    <thead id="tablehead">Search Results</thead>
+                    <thead id="tablehead"></thead>
                     <tbody id="tablebody">
                         <tr>
                             <td></td>
@@ -83,6 +87,8 @@
         $('#search').keyup(function (e) {
 
             tosearch = $("#search").val();
+
+            lastSearchTerm = tosearch;
             from = $("#search").attr('id');
             fuse = new Fuse(data, options);
             result = fuse.search(tosearch);
@@ -92,7 +98,6 @@
         $('.selfSearch').click(function (e) {
             // 
             const searchTerm = $(this).text().trim(); // .attr('id');
-            console.log(searchTerm);
             from = $(this).attr('data-search-name');
 
             // tosearch = $("#search").val();
@@ -103,7 +108,6 @@
 
         $("#tablebody2").on('click', 'a', function () {
             const searchTerm = $(this).text().trim().replace('search', ''); // .attr('id');
-            console.log(searchTerm);
             lastSearchTerm = searchTerm;
             from = $(this).attr('data-search-name');
 
@@ -115,8 +119,13 @@
 
         // not found click action
         $("#searchset2").on('click', '.notFound', function () {
-            console.log("yeah it's clicking")
-            console.log(this)
+
+            blech = $(this).attr('data-pointer');
+            chooseNotFound()
+        })
+
+        // not found click action
+        $("#searchset2").on('click', '.searchWord', function () {
 
             blech = $(this).attr('data-pointer');
             // $(".notFound").empty();
@@ -127,48 +136,43 @@
         // return the ID to the search list
         // using 'on' click event below because the table is dynamically generated
         $("#tablebody").on('click', 'a', function () {
-            console.log('working')
             resultKey = $(this).attr('data-keyvalue');
-            console.log('resultKey:');
-            console.log(resultKey);
             searchResultFrom = $(this).attr('data-original-search-name');
-            console.log('data-original-search-name');
-            console.log(searchResultFrom);
             chooseResult()
         })
 
         function chooseResult() {
             $("." + searchResultFrom + " .resultCode").empty();
             $("." + searchResultFrom + " .resultCode").append(resultKey);
-            console.log('searchResultFrom')
-            console.log(searchResultFrom)
         }
 
         function chooseNotFound() {
             $("." + blech + " .resultCode").empty();
             $("." + blech + " .resultCode").append('0');
-            console.log('WHY is this not working? works in console')
-            console.log(blech)
         }
 
 
         function populateResults() {
             $("#tablebody").empty();
             $("#tablehead").empty();
-            $("#result thead").append(lastSearchTerm);
-            $("#result thead").append(" :: ");
-            $("#result thead").append(from);
+            const tableheader = "<strong>" + lastSearchTerm.trim() + "</strong>  (" + from.trim() + ")";
+            $("#result thead").append("<tr><td colspan=\"2\"><p>" +
+                tableheader + "</p></td></tr>");
+            // $("#result thead").append(" :: ");
+            // $("#result thead").append(from);
 
             $.each(result, function (index, value) {
 
                 $("#result tbody").append(
-                    "<tr>" + "<td class=\"center-align\"><strong>" + value.KEY + "</strong> :: " +
-                    value.Destination +
-                    " :: " + value.STATE +
-                    " <a class=\"resultDataItem btn-floating red darken-4\" data-original-search-name=" +
+                    "<tr>" +
+                    "<td><a class=\"resultDataItem btn-floating green darken-3\" data-original-search-name=" +
                     from +
                     " data-keyvalue=" + value.KEY +
-                    "><i class='material-icons'>lightening</i>Select</a></td>" +
+                    "><i class='material-icons'>add</i>Select</a></td><td class=\"center-align\"><strong>" +
+                    value.KEY + "</strong> :: " +
+                    value.Destination +
+                    " :: " + value.STATE +
+                    "</td>" +
                     "</tr>")
             })
         }
@@ -178,28 +182,33 @@
             $("#tablehead2").empty();
         }
 
+        // initialize the search table
         function populateSearchTable() {
             const searchTargetData = searchTargets;
-            console.log('running populateSearchTable!')
-            console.log(searchTargetData)
 
             $.each(searchTargetData, function (index, value) {
                 let prepareClass = value.toLowerCase();
                 prepareClass = prepareClass.replace(/ /g, '-')
-                prepareClass = prepareClass.replace(/,/g, '')
+                    .replace(/,/g, '')
+                    .replace(/&/g, '')
+                    .replace(/'/g, '')
+                    .replace(/\./g, '')
+                    .replace(/\//g, '')
+                    .replace(/[|]/g, '')
+                    .replace(/\(|\)/g, '');
 
                 $("#searchset2 tbody").append(
                     "<tr class='" + prepareClass + "'>" + "<td>" + index +
                     "</td><td><a class=\"resultDataItem btn-floating red darken-4 selfSearch\" data-search-name='" +
                     prepareClass +
                     "'><i class='material-icons'>search</i>" + value +
-                    "</a></td><td class=\"center-align\"><strong>" +
+                    "</a></td><td class=\"center-align\"><strong class=\"searchWord copySet\">" +
                     value +
-                    "</strong> :: <span class='replaceMe resultCode'>???</span>" +
+                    "</strong></td> :: <td><span contenteditable='true' class='replaceMe resultCode copySet'>???</span>" +
                     "</td>" +
-                    "<td><span class='notFound' data-pointer=\"" + prepareClass + "\"" +
-                    "" +
-                    ">0</span></td>" +
+                    "<td><i class='material-icons notFound red-text text-darken-4' data-pointer=\"" +
+                    prepareClass +
+                    "\">do_not_disturb</i></td>" +
                     "</tr>")
             })
         }
@@ -211,6 +220,23 @@
     </script>
     <script src="./data.js"></script>
     <script src="./searchTargets.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
+    <script>
+        var clipboard = new Clipboard('.copier');
+
+        clipboard.on('success', function (e) {
+            console.info('Action:', e.action);
+            console.info('Text:', e.text);
+            console.info('Trigger:', e.trigger);
+
+            e.clearSelection();
+        });
+
+        clipboard.on('error', function (e) {
+            console.error('Action:', e.action);
+            console.error('Trigger:', e.trigger);
+        });
+    </script>
 </body>
 
 

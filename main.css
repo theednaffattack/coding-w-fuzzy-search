@@ -16,8 +16,6 @@ body {
   overflow-y: scroll;
 }
 
-.notFound {
-  /* some stuff: ; */
-  font-family: "Orbitron, sans";
-  font-size: 2em;
+.svgClippy {
+  width: 16px;
 }
