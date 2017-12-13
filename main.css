@@ -1,0 +1,23 @@
+.pageheader {
+  background-color: #176dc2;
+}
+
+.text-white {
+  color: #ffffff;
+}
+
+body {
+  background-color: #fafafa;
+}
+
+#searchList {
+  height: 500px;
+  overflow: hidden;
+  overflow-y: scroll;
+}
+
+.notFound {
+  /* some stuff: ; */
+  font-family: "Orbitron, sans";
+  font-size: 2em;
+}
